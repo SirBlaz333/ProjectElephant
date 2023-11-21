@@ -1,0 +1,18 @@
+#parse("/velocity/home_layout.vm")
+#@homeLayout()
+<div class="container shadow border p-5 mb-3">
+    #parse("/velocity/profile/_lang.vm")
+</div>
+<div class="container shadow border p-5 mb-3">
+    #parse("/velocity/profile/_api_keys.vm")
+</div>
+<div class="container shadow border p-5 mb-3">
+    #parse("/velocity/profile/_db_user.vm")
+</div>
+<div class="container shadow border p-5 mb-3">
+    #parse("/velocity/profile/_roles.vm")
+</div>
+<div class="container shadow border p-5 mb-3">
+    #parse("/velocity/profile/_password.vm")
+</div>
+#end

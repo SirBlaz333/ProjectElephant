@@ -1,0 +1,8 @@
+<div class="jumbotron jumbotron-fluid ">
+    <div class="container shadow border p-5">
+        <h1 class="display-4">$msg.get("dashboard.jumbotron.title")</h1>
+        <p class="lead">$msg.get("dashboard.jumbotron.message")</p>
+        <a class="btn btn-primary btn-lg" href="/registration/resend-confirm" role="button">$msg.get(
+            "dashboard.jumbotron.button")</a>
+    </div>
+</div>

@@ -1,0 +1,57 @@
+#parse("/velocity/home_layout.vm")
+#parse("/velocity/database/_connection_spoiler.vm")
+#@homeLayout()
+    #if ($currentUser.role().toString().equals("UNCHEKED"))
+        #parse("/velocity/home/_no-verified.vm")
+    #else
+        #parse("/velocity/home/_verified.vm")
+    #end
+<div class="container pt-5">
+    <div class="card-list">
+        <div class="card-list-head">
+            <h3>$msg.get('database.title')</h3>
+        </div>
+        <div class="card-list-body card-task">
+
+            #if ($bases.size() > 0)
+                #foreach ($base in $bases)
+                    <div class="card-body border mb-1">
+                        <div class="card-title">
+                            <a href="/database/$base.name">
+                                <h6>
+                                    <ion-icon name="server-outline"></ion-icon>
+                                    $base.name
+                                </h6>
+                            </a>
+                            #dbPresets ( $base.name )
+                        </div>
+                        <div class="card-meta">
+                            <div class="card-options">
+                                <form method="post" action="/database/$base.name/delete"
+                                      class="d-inline">
+                                    <button class="btn" type="submit">
+                                        <ion-icon name="trash"></ion-icon>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                #end
+            #else
+                <p>$msg.get('database.empty')</p>
+            #end
+        </div>
+    </div>
+    #if($currentUser.role().maxDB() > $bases.size())
+        <form class="p-4 p-md-5" action="/database" method="post">
+            <input name="_csrf" value="$!csrf" type="hidden"/>
+            <button class="w-100 btn" type="submit">$msg.get('database.form.create_button')</button>
+        </form>
+    #elseif($currentUser.role().maxDB() == 0)
+        $msg.get('database.form.approve')
+        <button class="w-100 btn disabled" type="submit">$msg.get('database.form.create_button')</button>
+    #else
+        $msg.get('database.form.limits')
+        <button class="w-100 btn disabled" type="submit">$msg.get('database.form.create_button')</button>
+    #end
+#end
