@@ -1,23 +1,41 @@
 package edu.sumdu.tss.elephant.helper.utils;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 class ParameterizedStringFactoryTest {
 
-    public static String test = "select :test from :table";
+    private ParameterizedStringFactory instance;
+    private static final String test = "select :test from :table";
+
+    @BeforeEach
+    void setUp() {
+        instance = new ParameterizedStringFactory(test);
+    }
 
     @Test
     void addParameter() {
-        ParameterizedStringFactory instance = new ParameterizedStringFactory(test);
         String actual = instance.addParameter("test", "TEST").addParameter("table", "TABLE").toString();
-        assertEquals(actual, "select TEST from TABLE");
+        assertEquals("select TEST from TABLE", actual);
+    }
+
+    @Test
+    void addParameterWithNullValue() {
+        String actual = instance.addParameter("test", null).toString();
+        assertEquals("select null from :table", actual);
+    }
+
+    @Test
+    void addDuplicateParameter() {
+        instance.addParameter("test", "TEST");
+        String actual = instance.addParameter("test", "NEW_TEST").toString();
+        assertEquals("select NEW_TEST from :table", actual);
     }
 
     @Test
     void testToString() {
-        ParameterizedStringFactory instance = new ParameterizedStringFactory(test);
         assertEquals(test, instance.toString());
     }
 }
