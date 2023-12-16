@@ -23,12 +23,18 @@ class ParameterizedStringFactoryTest {
 
     @Test
     void addParameterWithNullValue() {
+        String actual = new String();
+
         try {
-            String actual = instance.addParameter("test", null).toString();
+            actual = instance.addParameter("test", null).toString();
         }
         catch (Exception e) {
             assertEquals(e.getMessage(), "Cannot invoke \"String.length()\" because \"replacement\" is null");
+
+            return;
         }
+
+        assertEquals("select null from :table", actual);
     }
 
     @Test
