@@ -11,14 +11,14 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
 //TODO: reset temaplte for html+password
 public class MailService {
-
+    public static final String FILE_NAME = "messages.txt";
     private static final MailService mail = new MailService();
     private final String from;
     private final Session session;
@@ -36,7 +36,14 @@ public class MailService {
                 return new PasswordAuthentication(Keys.get("EMAIL.USER"), Keys.get("EMAIL.PASSWORD"));
             }
         });
-        //session.setDebug(true);
+    }
+
+    private static void writeMessageToFile(Message message) {
+        try (FileOutputStream fileOutputStream = new FileOutputStream(FILE_NAME)) {
+            message.writeTo(fileOutputStream);
+        } catch (IOException | MessagingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -51,7 +58,7 @@ public class MailService {
         message.addRecipient(Message.RecipientType.TO, new InternetAddress(mailTo));
         message.setSubject(new MessageBundle(lang.toString()).get("mail.conformation"));
         message.setContent(generateContent("mail_conformation", new Object[] {Keys.get("APP.URL"), token}, lang));
-        Transport.send(message);
+        writeMessageToFile(message);
     }
 
     public static void sendResetLink(String token, String mailTo, Lang lang) throws MessagingException {
@@ -60,7 +67,7 @@ public class MailService {
         message.addRecipient(Message.RecipientType.TO, new InternetAddress(mailTo));
         message.setSubject(new MessageBundle(lang.toString()).get("mail.reset"));
         message.setContent(generateContent("password_reset", new Object[] {Keys.get("APP.URL"), token}, lang));
-        Transport.send(message);
+        writeMessageToFile(message);
     }
 
     private String getResource(String resource, Lang langCode) {
