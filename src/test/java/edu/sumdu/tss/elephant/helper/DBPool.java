@@ -10,6 +10,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.sql2o.Sql2o;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -46,7 +48,7 @@ class DBPoolTest {
     }
 
     @Test
-    void testConnectionPoolSizeManagement() throws NoSuchFieldException, IllegalAccessException {
+    void testConnectionPoolSizeManagement() throws NoSuchFieldException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         // Define the expected maximum connection pool size
         int expectedMaxConnection = 10;
 
@@ -56,16 +58,18 @@ class DBPoolTest {
         Map<String, Pair<Long, Sql2o>> storage = (Map<String, Pair<Long, Sql2o>>) storageField.get(null);
 
         // Simulate exceeding the maximum connection pool size
-        int connectionsCreated = 0; // Count the connections created
-        for (int i = 0; i < expectedMaxConnection; i++) {
-            Sql2o connection = DBPool.getConnection("testDB" + i);
-            if (storage.containsKey("testDB" + i)) {
-                connectionsCreated++;
-            }
+        int connectionsCreated = 0;
+        for (int i = 0; i < expectedMaxConnection + 1; i++) {
+            DBPool.getConnection("testDB" + i);
         }
 
+        // Invoke flush using reflection
+        Method flushMethod = DBPool.class.getDeclaredMethod("flush");
+        flushMethod.setAccessible(true);
+        flushMethod.invoke(null);
+
         // Assert: Ensure that the pool size is not exceeded
-        assertEquals(expectedMaxConnection, connectionsCreated);
+        assertTrue(storage.size() <= expectedMaxConnection, "Pool size should not exceed maximum connections after flush");
     }
 
     @Test
@@ -74,4 +78,5 @@ class DBPoolTest {
         String expectedUrl = "postgresql://mockValue:mockValue@mockValue:mockValue/testDB";
         assertEquals(expectedUrl, DBPool.dbUtilUrl(dbName));
     }
+
 }
