@@ -75,4 +75,73 @@ class ScriptReaderTest {
 
         assertFalse(insideRemark);
     }
+
+    @Test
+    void testReadStatementWithDollarQuotedString() throws IOException {
+        String script = "$$Dollar quoted string$$; SELECT * FROM table;";
+        Reader reader = new StringReader(script);
+        ScriptReader scriptReader = new ScriptReader(reader);
+
+        assertEquals("$$Dollar quoted string$$", scriptReader.readStatement().trim());
+        assertEquals("SELECT * FROM table", scriptReader.readStatement().trim());
+        assertNull(scriptReader.readStatement());
+    }
+
+    @Test
+    void testReadStatementWithNestedBlockComments() throws IOException {
+        String script = "/* Outer comment /* Nested comment */ Outer continuation */ SELECT * FROM table;";
+        Reader reader = new StringReader(script);
+        ScriptReader scriptReader = new ScriptReader(reader);
+
+        assertEquals("/* Outer comment /* Nested comment */ Outer continuation */ SELECT * FROM table", scriptReader.readStatement().trim());
+        assertNull(scriptReader.readStatement()); // EOF
+    }
+    @Test
+    void testReadStatementWithEOFInStringLiteral() throws IOException {
+        String script = "SELECT * FROM table WHERE name = 'incomplete";
+        Reader reader = new StringReader(script);
+        ScriptReader scriptReader = new ScriptReader(reader);
+
+        assertNotNull(scriptReader.readStatement());
+    }
+
+    @Test
+    void testReadStatementWithEOFInBlockComment() throws IOException {
+        String script = "/* Incomplete block comment";
+        Reader reader = new StringReader(script);
+        ScriptReader scriptReader = new ScriptReader(reader);
+
+        assertNotNull(scriptReader.readStatement());
+    }
+
+    @Test
+    void testIOExceptionOnRead() throws IOException {
+        Reader reader = new StringReader("SELECT * FROM DUAL;") {
+            @Override
+            public int read(char[] cbuf, int off, int len) throws IOException {
+                throw new IOException("Read error");
+            }
+        };
+        ScriptReader scriptReader = new ScriptReader(reader);
+
+        assertThrows(RuntimeException.class, scriptReader::readStatement);
+    }
+
+    @Test
+    void testLargeSQLStatement() throws IOException {
+        String largeSQL = "SELECT '" + new String(new char[1000]).replace("\0", "a") + "';";
+        ScriptReader scriptReader = new ScriptReader(new StringReader(largeSQL));
+
+        assertNotNull(scriptReader.readStatement());
+        assertNull(scriptReader.readStatement());
+    }
+
+    @Test
+    void testEndOfFileWithoutSemicolon() throws IOException {
+        String script = "SELECT * FROM table WHERE id = 1";
+        ScriptReader scriptReader = new ScriptReader(new StringReader(script));
+
+        assertNotNull(scriptReader.readStatement());
+        assertNull(scriptReader.readStatement());
+    }
 }
