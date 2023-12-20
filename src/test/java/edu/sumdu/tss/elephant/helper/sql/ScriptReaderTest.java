@@ -106,6 +106,15 @@ class ScriptReaderTest {
     }
 
     @Test
+    void testReadStatementWithQuotes() throws IOException {
+        String script = "SELECT * FROM table WHERE name = \"incomplete\"";
+        Reader reader = new StringReader(script);
+        ScriptReader scriptReader = new ScriptReader(reader);
+
+        assertNotNull(scriptReader.readStatement());
+    }
+
+    @Test
     void testReadStatementWithEOFInBlockComment() throws IOException {
         String script = "/* Incomplete block comment";
         Reader reader = new StringReader(script);
