@@ -1,16 +1,10 @@
 package edu.sumdu.tss.elephant.helper;
 
 import edu.sumdu.tss.elephant.helper.enums.Lang;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
+import org.mockito.MockedStatic;
 
-import javax.mail.Message;
 import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -18,19 +12,37 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mockStatic;
 
 class MailServiceTest {
+    private static MockedStatic<Keys> mockedKeys;
 
     private String token;
     private String user;
     private Lang lang;
+
+    @BeforeAll
+    static void setUpAll() {
+        mockedKeys = mockStatic(Keys.class);
+        mockedKeys.when(() -> Keys.get("DEFAULT_LANG")).thenReturn("EN");
+        mockedKeys.when(() -> Keys.get("EMAIL.FROM")).thenReturn("from");
+        mockedKeys.when(() -> Keys.get("EMAIL.HOST")).thenReturn("localhost");
+        mockedKeys.when(() -> Keys.get("EMAIL.PORT")).thenReturn("5432");
+        mockedKeys.when(() -> Keys.get("EMAIL.SSL")).thenReturn("something");
+        mockedKeys.when(() -> Keys.get("EMAIL.USER")).thenReturn("emailuser");
+        mockedKeys.when(() -> Keys.get("EMAIL.PASSWORD")).thenReturn("emailpassowrd");
+    }
+
+    @AfterAll
+    static void tearDownAll() {
+        mockedKeys.close();
+    }
 
     @BeforeEach
     void setUp() {
         token = "token";
         user = "user";
         lang = Lang.EN;
-        Keys.loadParams(new File("config.properties"));
     }
 
     @Test
