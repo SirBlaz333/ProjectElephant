@@ -11,6 +11,7 @@ import edu.sumdu.tss.elephant.helper.Keys;
 
 import java.text.MessageFormat;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.ResourceBundle;
 
 public class MessageBundle {
@@ -34,4 +35,16 @@ public class MessageBundle {
         return MessageFormat.format(get(key), args);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        MessageBundle that = (MessageBundle) o;
+        return Objects.equals(messages, that.messages);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(messages);
+    }
 }
