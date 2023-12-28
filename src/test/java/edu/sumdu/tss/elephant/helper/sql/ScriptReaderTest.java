@@ -106,6 +106,15 @@ class ScriptReaderTest {
     }
 
     @Test
+    void testReadStatementWithQuotes() throws IOException {
+        String script = "SELECT * FROM table WHERE name = \"incomplete\"";
+        Reader reader = new StringReader(script);
+        ScriptReader scriptReader = new ScriptReader(reader);
+
+        assertNotNull(scriptReader.readStatement());
+    }
+
+    @Test
     void testReadStatementWithEOFInBlockComment() throws IOException {
         String script = "/* Incomplete block comment";
         Reader reader = new StringReader(script);
@@ -142,6 +151,39 @@ class ScriptReaderTest {
         ScriptReader scriptReader = new ScriptReader(new StringReader(script));
 
         assertNotNull(scriptReader.readStatement());
+        assertNull(scriptReader.readStatement());
+    }
+
+    @Test
+    void testReadStatementWithNestedStringLiterals() throws IOException {
+        String script = "SELECT * FROM table WHERE column = 'value ''nested'' value';";
+        ScriptReader scriptReader = new ScriptReader(new StringReader(script));
+        assertEquals("SELECT * FROM table WHERE column = 'value ''nested'' value'", scriptReader.readStatement().trim());
+        assertNull(scriptReader.readStatement());
+    }
+
+    @Test
+    void testReadStatementWithUnclosedStringLiteral() throws IOException {
+        String script = "SELECT * FROM table WHERE column = 'unclosed";
+        ScriptReader scriptReader = new ScriptReader(new StringReader(script));
+        assertNotNull(scriptReader.readStatement());
+        assertNull(scriptReader.readStatement());
+    }
+
+    @Test
+    void testReadStatementWithSpecialCharacters() throws IOException {
+        String script = "SELECT *\nFROM table\nWHERE id = 1;";
+        ScriptReader scriptReader = new ScriptReader(new StringReader(script));
+        assertNotNull(scriptReader.readStatement());
+        assertNull(scriptReader.readStatement());
+    }
+
+    @Test
+    void testReadStatementWithCombinedComments() throws IOException {
+        String script = "/* Block comment */ SELECT * FROM table; -- Line comment";
+        ScriptReader scriptReader = new ScriptReader(new StringReader(script));
+        assertEquals("/* Block comment */ SELECT * FROM table", scriptReader.readStatement().trim());
+        assertEquals("-- Line comment", scriptReader.readStatement().trim());
         assertNull(scriptReader.readStatement());
     }
 }

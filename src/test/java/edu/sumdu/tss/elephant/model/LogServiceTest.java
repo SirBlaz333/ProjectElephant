@@ -2,7 +2,7 @@ package edu.sumdu.tss.elephant.model;
 
 import edu.sumdu.tss.elephant.helper.DBPool;
 import edu.sumdu.tss.elephant.helper.Keys;
-import edu.sumdu.tss.elephant.helper.utils.CmdUtil;
+import io.javalin.http.Context;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,25 +14,20 @@ import org.sql2o.Query;
 import org.sql2o.Sql2o;
 
 import java.io.IOException;
-import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.times;
 
-class DbUserServiceTest {
-    private static MockedStatic<UserService> userService;
+class LogServiceTest {
+
     private static MockedStatic<Keys> keys;
     private static MockedStatic<DBPool> dbPool;
     private static Sql2o sql2o;
     private Connection connection;
     private Query query;
-
     @BeforeAll
     static void setUpAll() {
-        userService = mockStatic(UserService.class);
         keys = mockStatic(Keys.class);
         keys.when(() -> Keys.get("DB.NAME")).thenReturn("db");
         keys.when(() -> Keys.get("DB.URL")).thenReturn("localhost");
@@ -49,7 +44,6 @@ class DbUserServiceTest {
     static void tearDownAll() throws IOException {
         keys.close();
         dbPool.close();
-        userService.close();
     }
 
     @BeforeEach
@@ -62,31 +56,16 @@ class DbUserServiceTest {
     }
 
     @Test
-    public void testInit() throws Exception {
-        when(connection.createQuery(anyString(), anyBoolean())).thenReturn(query);
+    void testPush() {
+        Context context = mock(Context.class);
+        User user = mock(User.class);
+        when(user.getLogin()).thenReturn("username");
+        when(context.ip()).thenReturn("ip");
+        when(context.sessionAttribute(anyString())).thenReturn(user);
+        when(connection.createQuery(anyString())).thenReturn(query);
 
-        DbUserService.initUser("username", "password");
-        userService.verify(() -> UserService.createTablespace(eq("username"), anyString()));
+        LogService.push(context, "database", "message");
         verify(query).executeUpdate();
     }
 
-    @Test
-    public void testPasswordReset() throws Exception {
-        when(connection.createQuery(anyString(), anyBoolean())).thenReturn(query);
-
-        DbUserService.dbUserPasswordReset("username", "password");
-        verify(query).executeUpdate();
-    }
-
-    @Test
-    public void testDropUser() throws Exception {
-        try(MockedStatic<CmdUtil> cmdUtil = mockStatic(CmdUtil.class)) {
-            when(connection.createQuery(anyString(), anyBoolean())).thenReturn(query);
-            when(sql2o.beginTransaction()).thenReturn(connection);
-
-            DbUserService.dropUser("username");
-            verify(query).executeUpdate();
-            cmdUtil.verify(() -> CmdUtil.exec(anyString()));
-        }
-    }
 }

@@ -1,12 +1,14 @@
 package edu.sumdu.tss.elephant.helper;
 
 import io.javalin.http.Context;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -18,8 +20,20 @@ import static org.mockito.Mockito.*;
 
 
 class ViewHelperTest {
+    private static MockedStatic<Keys> mockedKeys;
     private Context context;
     private Map<String, Object> model;
+
+    @BeforeAll
+    static void setUpAll() {
+        mockedKeys = mockStatic(Keys.class);
+        mockedKeys.when(() -> Keys.get("DEFAULT_LANG")).thenReturn("EN");
+    }
+
+    @AfterAll
+    static void tearDownAll() {
+        mockedKeys.close();
+    }
 
     @BeforeEach
     void setUp() {
@@ -27,7 +41,6 @@ class ViewHelperTest {
         context = Mockito.mock(Context.class);
         when(context.sessionAttribute(Keys.MODEL_KEY)).thenReturn(model);
         when(context.path()).thenReturn(".");
-        Keys.loadParams(new File("config.properties"));
         ViewHelper.defaultVariables(context);
     }
 

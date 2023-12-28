@@ -2,7 +2,8 @@ package edu.sumdu.tss.elephant.model;
 
 import edu.sumdu.tss.elephant.helper.DBPool;
 import edu.sumdu.tss.elephant.helper.Keys;
-import edu.sumdu.tss.elephant.helper.utils.CmdUtil;
+import edu.sumdu.tss.elephant.helper.exception.NotFoundException;
+import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,22 +18,17 @@ import java.io.IOException;
 import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.times;
 
-class DbUserServiceTest {
-    private static MockedStatic<UserService> userService;
+class ScriptServiceTest {
     private static MockedStatic<Keys> keys;
     private static MockedStatic<DBPool> dbPool;
     private static Sql2o sql2o;
     private Connection connection;
     private Query query;
-
     @BeforeAll
     static void setUpAll() {
-        userService = mockStatic(UserService.class);
         keys = mockStatic(Keys.class);
         keys.when(() -> Keys.get("DB.NAME")).thenReturn("db");
         keys.when(() -> Keys.get("DB.URL")).thenReturn("localhost");
@@ -49,7 +45,6 @@ class DbUserServiceTest {
     static void tearDownAll() throws IOException {
         keys.close();
         dbPool.close();
-        userService.close();
     }
 
     @BeforeEach
@@ -58,35 +53,51 @@ class DbUserServiceTest {
         when(sql2o.open()).thenReturn(connection);
         query = Mockito.mock(Query.class);
         when(connection.createQuery(anyString())).thenReturn(query);
+        when(query.addParameter(anyString(), any(Integer.class))).thenReturn(query);
         when(query.addParameter(anyString(), anyString())).thenReturn(query);
     }
 
     @Test
-    public void testInit() throws Exception {
-        when(connection.createQuery(anyString(), anyBoolean())).thenReturn(query);
+    void testList() {
+        when(connection.createQuery(anyString())).thenReturn(query);
+        when(query.executeAndFetch(Script.class)).thenReturn(Collections.emptyList());
 
-        DbUserService.initUser("username", "password");
-        userService.verify(() -> UserService.createTablespace(eq("username"), anyString()));
-        verify(query).executeUpdate();
+        assertEquals(Collections.emptyList(), ScriptService.list("database"));
     }
 
     @Test
-    public void testPasswordReset() throws Exception {
-        when(connection.createQuery(anyString(), anyBoolean())).thenReturn(query);
+    void testById() {
+        Script script = mock(Script.class);
+        when(connection.createQuery(anyString())).thenReturn(query);
+        when(query.executeAndFetchFirst(Script.class)).thenReturn(script);
 
-        DbUserService.dbUserPasswordReset("username", "password");
-        verify(query).executeUpdate();
+        assertEquals(script, ScriptService.byId(1));
     }
 
     @Test
-    public void testDropUser() throws Exception {
-        try(MockedStatic<CmdUtil> cmdUtil = mockStatic(CmdUtil.class)) {
+    void testByIdFailed() {
+        when(connection.createQuery(anyString())).thenReturn(query);
+        when(query.executeAndFetchFirst(Script.class)).thenReturn(null);
+
+        assertThrows(NotFoundException.class, () -> ScriptService.byId(1));
+    }
+
+    @Test
+    void testSave() {
+        when(connection.createQuery(anyString(), anyBoolean())).thenReturn(query);
+        when(query.bind(any())).thenReturn(query);
+        ScriptService.save(new Script());
+        verify(query).executeUpdate();
+    }
+    @Test
+    void testDestroy() {
+        try(MockedStatic<FileUtils> fileUtils = mockStatic(FileUtils.class)) {
+            Script script = mock(Script.class);
             when(connection.createQuery(anyString(), anyBoolean())).thenReturn(query);
-            when(sql2o.beginTransaction()).thenReturn(connection);
-
-            DbUserService.dropUser("username");
+            when(query.bind(any())).thenReturn(query);
+            when(script.getPath()).thenReturn("/");
+            ScriptService.destroy(script);
             verify(query).executeUpdate();
-            cmdUtil.verify(() -> CmdUtil.exec(anyString()));
         }
     }
 }
