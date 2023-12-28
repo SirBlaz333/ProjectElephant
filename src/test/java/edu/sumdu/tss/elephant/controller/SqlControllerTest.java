@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import static edu.sumdu.tss.elephant.controller.ScriptsController.BASIC_PAGE;
+import static edu.sumdu.tss.elephant.controller.SqlController.BASIC_PAGE;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.when;

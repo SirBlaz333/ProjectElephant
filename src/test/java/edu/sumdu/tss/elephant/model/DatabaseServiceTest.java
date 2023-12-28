@@ -130,7 +130,10 @@ class DatabaseServiceTest {
             when(connection.createQuery(anyString(), anyBoolean())).thenReturn(query);
             when(query.executeAndFetch(Database.class)).thenReturn(Collections.emptyList());
 
-            DatabaseService.create("dbname", "owner", "tablespace");
+            Database database = new Database();
+            database.setName("database");
+            database.setOwner("owner");
+            DatabaseService.drop(database);
             verify(query, times(2)).executeUpdate();
         }
     }

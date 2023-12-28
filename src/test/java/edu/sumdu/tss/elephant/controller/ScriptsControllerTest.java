@@ -68,6 +68,7 @@ class ScriptsControllerTest {
         keys.close();
         viewHelper.close();
         fileUtils.close();
+        dbPool.close();
     }
 
     @BeforeEach

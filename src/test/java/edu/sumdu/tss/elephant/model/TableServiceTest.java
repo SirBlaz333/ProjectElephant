@@ -54,6 +54,7 @@ class TableServiceTest {
         query = mock(Query.class);
         when(connection.createQuery(anyString())).thenReturn(query);
         when(query.addParameter(anyString(), any(Integer.class))).thenReturn(query);
+        when(query.addParameter(anyString(), anyInt())).thenReturn(query);
         when(query.addParameter(anyString(), anyString())).thenReturn(query);
     }
 
@@ -80,6 +81,6 @@ class TableServiceTest {
         Table table = mock(Table.class);
         when(query.executeAndFetchTable()).thenReturn(table);
 
-        assertEquals(table, TableService.list("database"));
+        assertEquals(table, TableService.byName("database", "tablename", 1, 1));
     }
 }
