@@ -88,11 +88,12 @@ public class ScriptsController extends AbstractController {
         Statement statement = null;
         Connection connection = null;
         var list = new ArrayList<Pair<String, String>>(500);
+        ScriptReader sr = null;
         try {
             String database = context.pathParam("database");
             String scriptId = context.pathParam("script");
             Script script = ScriptService.byId(Integer.valueOf(scriptId));
-            var sr = new ScriptReader(new BufferedReader(new FileReader(script.getPath())));
+            sr = new ScriptReader(new BufferedReader(new FileReader(script.getPath())));
             String line;
             String result;
             connection = DBPool.getConnection(database).open().getJdbcConnection();
@@ -123,6 +124,9 @@ public class ScriptsController extends AbstractController {
                 connection.close();
             } catch (SQLException e) {
                 e.printStackTrace();
+            }
+            if(sr != null) {
+                sr.close();
             }
         }
         var model = currentModel(context);
