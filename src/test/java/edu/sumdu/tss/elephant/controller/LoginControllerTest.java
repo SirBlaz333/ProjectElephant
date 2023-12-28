@@ -178,10 +178,8 @@ class LoginControllerTest {
         User mockUser = mock(User.class);
         userService.when(() -> UserService.byToken(eq("validToken"))).thenReturn(mockUser);
 
-        // Act
         LoginController.resetPassword(context);
 
-        // Assert
         verify(mockUser).password(eq("newValidPassword"));
         verify(mockUser).resetToken();
         userService.verify(() -> UserService.save(eq(mockUser)));
@@ -204,10 +202,8 @@ class LoginControllerTest {
 
         userService.when(() -> UserService.byToken(eq("invalidToken"))).thenThrow(new NotFoundException("User not found"));
 
-        // Act
         LoginController.resetPassword(context);
 
-        // Assert
         verify(context, times(2)).sessionAttribute(eq(Keys.ERROR_KEY), any());
         verify(context).redirect(BASIC_PAGE);
         verify(context).render(eq("/velocity/login/reset.vm"), anyMap());
@@ -246,7 +242,6 @@ class LoginControllerTest {
 
         LoginController.lang(context);
 
-        // Assert
         verify(context).sessionAttribute(eq(Keys.LANG_KEY), eq("EN"));
         viewHelper.verify(() -> ViewHelper.redirectBack(eq(context)));
     }
@@ -269,7 +264,6 @@ class LoginControllerTest {
 
         LoginController.lang(context);
 
-        // Assert
         verify(context).sessionAttribute(eq(Keys.ERROR_KEY), anyString());
         viewHelper.verify(() -> ViewHelper.redirectBack(eq(context)));
     }
