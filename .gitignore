@@ -4,3 +4,4 @@
 config.properties
 config.txt
 start_psgl_server.bat
+createAll.bat
